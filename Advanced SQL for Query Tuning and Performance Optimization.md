@@ -3,12 +3,12 @@
 ## 1. General Tips
 
 - The first step in any query is to only choose the columns that are required
-- Don't use `WHERE colum = NULL`, use `IS NULL` instead
+- Don't use `WHERE column = NULL`, use `IS NULL` instead
 - Don't use functions in WHERE clause unless you have a functional index
 - If a plan uses index range scan, keep the range as small as possible
 - `LIKE 'ABC%'` can use an index while `LIKE '%ABC'`can't
 - if we need to use `ORDER BY column`, it's better to have an index on the same column
-- When filtering on range conditions, especially dates, use continous conditions, such as `TRUNC(sysdate)` and `TRUNC(sysdate+1)`
+- When filtering on range conditions, especially dates, use continuous conditions, such as `TRUNC(sysdate)` and `TRUNC(sysdate+1)`
 - Don't separate date and time into separate columns. Use a datetime data type
 - Don't store numeric data as char, varchar, or text; use a numeric type (except phone numbers)
 
@@ -65,7 +65,7 @@ FROM staff
 WHERE job_title = 'Operator';
 ```
 
-- Hash: Hash functions take an arbitrary lenght of data and turn it into fixed-size string.
+- Hash: Hash functions take an arbitrary length of data and turn it into fixed-size string.
   - Hash functions are designed in such a way that different inputs produce different outputs and the values are virtually unique.
   - Size of hash depends on the algorithm used.
   - There's no preserving order with hash functions.
@@ -100,10 +100,10 @@ INNER JOIN company_regions cr
 ON s.region_id = cr.region_id
 ```
 
-- Hash Joins: In first step, hash values for the smaller table in a join are generated for the primary keys and stored in the table. In the next phase which is called Probe Phase, the algorithm steps through the larger table, commputes the hash value of primary or foreign key and looks up the corresponding value in hash table.
+- Hash Joins: In first step, hash values for the smaller table in a join are generated for the primary keys and stored in the table. In the next phase which is called Probe Phase, the algorithm steps through the larger table, computes the hash value of primary or foreign key and looks up the corresponding value in hash table.
   - Hash joins only work with equality conditions i.e. `WHERE column='value'`
   - The time it takes the joins is based on the hash table to be generated and then going through the larger table, calculating hash values and performing lookups
-  - The key advnatage of hash joins are that they can perform fast lookups and can be faster than other join methods.
+  - The key advantage of hash joins are that they can perform fast lookups and can be faster than other join methods.
 
 ```sql
 set enable_nestloop=false
@@ -136,7 +136,7 @@ ON s.region_id = cr.region_id
 
 - Subqueries vs Joins
   - Conventional wisdom says that joins are always faster than subqueries, however, query plan builders have become more effective at optimizing subqueries.
-  - It's better to optimize for clarirty i.e. making the intention of the query clear, unless there's a significant loss in performace
+  - It's better to optimize for clarity i.e. making the intention of the query clear, unless there's a significant loss in performance
 
 ## 4. Partitioning
 
@@ -145,7 +145,7 @@ Partition Key: Determines which partition is used for data.
 Partition Bounds: Min and Max values allowed in a partition.
 
 - Horizontal Partitioning: Splitting the table by rows. Makes each partition to be treated like a table, which means we are able to limit scans or create indexes on each partition.
-  - Horizontal partitioning is mainly done on timeseries data since most recent data is the most likely data to be queried and older data is summarized in older paritions. There are other partitioning logics such as regional, product type, category, etc.
+  - Horizontal partitioning is mainly done on time-series data since most recent data is the most likely data to be queried and older data is summarized in older partitions. There are other partitioning logics such as regional, product type, category, etc.
     - Range Partitioning (FROM - TO): A type of horizontal partitioning, usually done on date values (e.g. monthly, yearly) but they can also be used in alphabetical or numeric ranges.
       - Useful when usually querying latest data or running comparative queries such as this month's sales vs. last month's sales.
       - Useful when dropping older records since it can done by dropping the partition.
@@ -153,7 +153,7 @@ Partition Bounds: Min and Max values allowed in a partition.
       - Suitable when data logically groups into subgroups.
       - Queries are often done on subgroups
       - Good option when data is not so date/time oriented
-    - Hash Partitioning (WITH): The partition key value is an input tool function that computes a value that decides which partiion should store the row. The partition key is not used directly, but instead in PostgreSQL, modulus division is applied to the partion key to compute a value that is based on the number of the partitions.
+    - Hash Partitioning (WITH): The partition key value is an input tool function that computes a value that decides which partition should store the row. The partition key is not used directly, but instead in PostgreSQL, modulus division is applied to the partition key to compute a value that is based on the number of the partitions.
       - Useful when data does not fall into subgroups
       - When we want even distribution among partition
 
@@ -203,7 +203,7 @@ CREATE TABLE product_kitchen PARTITION OF products
 ```
 
 ```sql
--- partion by hash example
+-- partition by hash example
 CREATE TABLE customer_interaction
             (ci_id INT NOT NULL,
              ci_url TEXT NOT NULL,
@@ -223,7 +223,7 @@ CREATE TABLE customer_interaction_3
 ```
 
 - Vertical Partitioning: Separates the columns of a large table into multiple tables with columns that are tend to be frequently queried together.
-  - When using vertical partitioning, the same primary key is used across all paritions
+  - When using vertical partitioning, the same primary key is used across all partitions
   - Vertical partitioning allows increasing the number of rows that are stored in a single data block
   - Global indexes can be created on each partition
   - They can be seen in data warehouses especially in product tables since they have a lot of attributes.
@@ -236,7 +236,7 @@ Materialized views are precomputed results from expensive queries. While they sa
 - Data can become stale in these views and they have to be refreshed. Update to source tables require update to the views `REFRESH MATERIALIZED VIEW`. This can lead to inconsistency.
 - They should be used only if we can tolerate inconsistency
 - They're useful when saving more time is more useful than saving storage.
-- We can create indexes on materialzed views as well
+- We can create indexes on materialized views as well
 
 ```sql
 CREATE MATERIALIZED VIEW mv_staff AS
@@ -258,7 +258,7 @@ REFRESH MATERIALIZED VIEW mv_staff;
 
 ## Housekeeping / Statistics
 
-Reindexing:
+Re-indexing:
 `REINDEX` command rebuilds corrupt indexes.
 
 - Isn't usually done, but helps with bugs if they occur
@@ -274,11 +274,11 @@ On top of tables, indexes, constraints, views, and materialized views, schemas a
 - Frequency of values: Fraction of nulls, number of distinct values, frequent values
 - Distribution of the data: Histograms describing spread of data
 
-One way to get statistics is to use the `ANALYZE` command or `VACCUM`. We can also set up the AUTO VACCUM daemon.
+One way to get statistics is to use the `ANALYZE` command or `VACUUM`. We can also set up the AUTO VACUUM daemon.
 
-- `VACCUM` reclaims some space of updated data
-- `VACCUM(FULL) [tablename]` locks tables and reclaims more space
-- `VACCUM(FULL, ANALYZE) [tablename]` performs full vaccum and collects statistics
+- `VACUUM` reclaims some space of updated data
+- `VACUUM(FULL) [tablename]` locks tables and reclaims more space
+- `VACUUM(FULL, ANALYZE) [tablename]` performs full vaccum and collects statistics
 
 ## Query Hints
 
@@ -290,4 +290,4 @@ SET enable_hashjoin=true
 SET enable_mergejoin=false
 ```
 
-PostgreSQL does not support inline hints like other DBMS softwares and generally it is recommended to do `VACUM` and `ANALYZE` instead.
+PostgreSQL does not support inline hints like other DBMS softwares and generally it is recommended to do `VACUUM` and `ANALYZE` instead.
